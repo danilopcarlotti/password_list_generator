@@ -1,60 +1,53 @@
-import re
-from itertools import permutations
+import re, itertools, sys
 
-##common separators of words and symbols
+class passwd_list_generator():
+    """Program used to test the strength of passwords"""
+    def __init__(self,filepath, name_passwd_list="password_list.txt"):
+        self.names_of_int = [n.strip() for n in open(filepath,'r')]
+        ##common separators of words and symbols
+        self.separators = ["@","-","?","_","*","%","!","#","/"]
+        ##substitution dictionary: words for symbols/numbers
+        self.substitution_dictionary = {"a":"@","e":"3","s":"5","i":"1","s":"$","s":"§","e":"&","o":"0"}
+        ##main list for pentesting.
+        self.passwd_list = open(name_passwd_list,"w",encoding='utf-8')
 
-separators = ["@","-","?","_","*","%","!","#"]
+    def add_dates_numbers(self):
+        x = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        for tup in itertools.product(x, repeat=8):
+            aux_text = ''
+            for n in tup:
+                aux_text += n
+            self.passwd_list.write(aux_text+'\n')
+        self.passwd_list.close()
 
-##substitution dictionary: words for symbols/numbers
+    def add_words(self):
+        for name in self.names_of_int:
+            for tup in itertools.product(x, repeat=8):
+                aux_text = name
+                number = ''
+                for n in tup:
+                    number += n
+                self.passwd_list.write(aux_text+number+'\n')
+                for sep in self.separators:
+                    self.passwd_list.write(aux_text+sep+number+'\n')
+                    self.passwd_list.write(number+sep+aux_text+'\n')
 
-substitution_dictionary = {"a":"@","e":"3","s":"5","i":"1","s":"$","s":"§","e":"&","o":"0"}
+    def add_substitution_words(self):
+        substitution_names = []
+        for name in self.names_of_int:
+            for k,v in self.substitution_dictionary.items():
+                substitution_names.append(name.replace(k,v))
+        self.names_of_int += substitution_names
+        self.names_of_int = set(self.names_of_int)
 
-##main list for pentesting.
+    def generate_password_list(self):
+        self.add_substitution_words()
+        self.add_words()
+        self.add_dates_numbers()
 
-passwd_list = open("passwd_list.txt","a",encoding='utf-8')
+def main(filepath):
+    psswrd = passwd_list_generator(filepath)
+    psswrd.generate_password_list()
 
-##lists that store important names and dates for the subject
-
-names = [n for n in input("Type important names for the subject separated by space. Ex.: relatives, pet, favorite series, etc...\n").split(" ")]
-dates = [d for d in input("Type relevant dates for the subject in the following format MMDDYYYY or DDMMYYYY. Ex.: aniversary, birthday, etc...\n").split(" ")]
-names2 = []
-dates2 = []
-
-def add_names(names_list):
-    for n in names_list:
-        for i in range(10):
-            passwd_list.write(n+str(i)+"\n")
-            for s in separators:
-                passwd_list.write(n+str(s)+str(i)+"\n")
-            for j in range(10):
-                passwd_list.write(n+str(i)+str(j)+"\n")
-                for q in separators:
-                    passwd_list.write(n+str(q)+str(i)+str(j)+"\n")
-                for k in range(10):
-                    passwd_list.write(n+str(i)+str(j)+str(k)+"\n")
-                    for r in separators:
-                        passwd_list.write(n+str(r)+str(i)+str(j)+str(k)+"\n")
-                    for l in range(10):
-                        passwd_list.write(n+str(i)+str(j)+str(k)+str(l)+"\n")
-                        for t in separators:
-                            passwd_list.write(n+str(t)+str(i)+str(j)+str(k)+str(l)+"\n")
-
-for d in dates:
-    for l in d:
-        dates2.append(l)
-
-for i in range(4,9):
-    for p in permutations(dates2,i):
-        passwd_list.write("".join(p)+"\n")
-
-
-for n in names:
-    for s in substitution_dictionary:
-        aux = re.sub(s,substitution_dictionary[s],n)
-        if aux not in names2:
-            names2.append(aux)
-
-add_names(names)
-add_names(names2)
-
-passwd_list.close()
+if __name__ == '__main__':
+    main(sys.argv[1])
